@@ -1,0 +1,75 @@
+name: Submission Review
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tools:
+    name: Tool Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+
+  review:
+    name: Problem Verification
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout trusted review tools
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: trusted
+          persist-credentials: false
+      - name: Checkout exact submission commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: submission
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r trusted/requirements.txt
+      - name: Build fixed ProbHub review environment
+        run: docker build -t daily-contribution-review trusted/tools
+      - name: Verify changed submission without network or credentials
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          python trusted/tools/review.py --source submission
+          --base "$BASE_SHA" --head "$HEAD_SHA"
+
+  smoke:
+    name: Review Environment Smoke Test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: docker build -t daily-contribution-review tools
+      - name: Exercise real standard and custom validation
+        run: >-
+          docker run --rm --network=none --cap-drop=ALL
+          --security-opt=no-new-privileges --pids-limit=256 --memory=4g --cpus=2
+          --read-only --user=10001:10001
+          --tmpfs=/tmp:rw,exec,nosuid,size=2g,mode=1777
+          daily-contribution-review smoke P0001
