@@ -2,6 +2,8 @@ import copy
 import json
 from pathlib import Path
 import sys
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -197,6 +199,18 @@ class ContributionTests(unittest.TestCase):
             c.prepare_submission(self.root)
         for path, content in before.items():
             self.assertEqual(path.read_bytes(), content)
+
+    def test_review_timeout_always_removes_daemon_side_container(self):
+        repo = Path(self.temp.name) / "repo"
+        shutil.copytree(self.root, repo / "submissions/test")
+        diff = subprocess.CompletedProcess(["git"], 0, stdout=b"submissions/test/P0001/problem.md\0")
+        calls = [diff, subprocess.TimeoutExpired("docker", 1800), subprocess.CompletedProcess(["docker"], 0)]
+        with patch.object(sys, "argv", ["review", "--source", str(repo), "--base", "a" * 40,
+                                      "--head", "b" * 40]), \
+                patch.object(review.subprocess, "run", side_effect=calls) as run, \
+                self.assertRaises(subprocess.TimeoutExpired):
+            review.main()
+        self.assertEqual(run.call_args_list[-1].args[0][:3], ["docker", "rm", "-f"])
 
 
 if __name__ == "__main__":

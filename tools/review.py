@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import uuid
 
 import yaml
 
@@ -33,9 +34,10 @@ def changed_targets(paths, mode):
     })
 
 
-def container_command(image, staged, target, mode):
+def container_command(image, staged, target, mode, name=None):
     return [
-        "docker", "run", "--rm", "--network=none", "--cap-drop=ALL",
+        "docker", "run", "--rm", "--init", "--name", name or f"daily-review-{uuid.uuid4().hex}",
+        "--network=none", "--cap-drop=ALL",
         "--security-opt=no-new-privileges", "--pids-limit=256",
         "--memory=4g", "--cpus=2", "--read-only", "--user=10001:10001",
         "--tmpfs=/tmp:rw,exec,nosuid,size=2g,mode=1777",
@@ -90,6 +92,7 @@ def main():
     if not targets:
         print("无题目变更；由工具测试检查本次修改。")
     for target in targets:
+        container_name = f"daily-review-{uuid.uuid4().hex}"
         with tempfile.TemporaryDirectory(prefix="daily-input-") as tmp:
             staged = Path(tmp)
             if args.mode == "submission":
@@ -99,7 +102,7 @@ def main():
                 for name in ("solution.md", "contribution.json"):
                     (staged / name).write_bytes((source / name).read_bytes())
                 write_workspace(staged, DRAFT_ID, cfg["name"])
-                command = container_command(args.image, staged, DRAFT_ID, "submission")
+                command = container_command(args.image, staged, DRAFT_ID, "submission", container_name)
             else:
                 source = args.source / target
                 solution = args.source / "Solution" / f"{target}.md"
@@ -107,8 +110,13 @@ def main():
                 copy_problem(source, staged / target)
                 (staged / "solution.md").write_bytes(solution.read_bytes())
                 write_workspace(staged, target, cfg["name"])
-                command = container_command(args.image, staged, target, "official")
-            subprocess.run(command, check=True, timeout=1800)
+                command = container_command(args.image, staged, target, "official", container_name)
+            try:
+                subprocess.run(command, check=True, timeout=1800)
+            finally:
+                # Killing the Docker client on timeout does not stop its daemon-side container.
+                subprocess.run(["docker", "rm", "-f", container_name], check=False,
+                               capture_output=True, timeout=30)
 
 
 if __name__ == "__main__":
