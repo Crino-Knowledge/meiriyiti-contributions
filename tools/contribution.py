@@ -1,6 +1,7 @@
 """Shared submission format and validation, also used by the official importer."""
 
 import argparse
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -294,9 +295,8 @@ def package_data(problem):
                 archive.write(path, path.name)
 
 
-def run_probhub(root, *args):
-    root = Path(root).resolve()
-    print(f"[ProbHub] {' '.join(args)}", flush=True)
+@lru_cache(maxsize=1)
+def probhub_command():
     executable = shutil.which("probhub.cmd" if os.name == "nt" else "probhub")
     if not executable:
         raise ValueError("未安装 ProbHub，请先运行 npm install -g probhub@0.7.1")
@@ -307,6 +307,17 @@ def run_probhub(root, *args):
         command = [shutil.which("node"), str(entry)]
     else:
         command = [executable]
+    version = subprocess.run([*command, "--version"], check=True, capture_output=True, text=True,
+                             encoding="utf-8", timeout=30).stdout.strip()
+    if version != PROBHUB_VERSION:
+        raise ValueError(f"投稿工具固定使用 ProbHub {PROBHUB_VERSION}，当前为 {version}")
+    return tuple(command)
+
+
+def run_probhub(root, *args):
+    root = Path(root).resolve()
+    print(f"[ProbHub] {' '.join(args)}", flush=True)
+    command = list(probhub_command())
     command.extend(["--workspace", str(root), "--json", *args])
     result = subprocess.run(command, cwd=root, capture_output=True, text=True, encoding="utf-8",
                             timeout=900, check=False)

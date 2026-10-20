@@ -188,6 +188,16 @@ class ContributionTests(unittest.TestCase):
         with patch.object(c, "run_probhub", side_effect=results), self.assertRaisesRegex(ValueError, "100"):
             c.verify_problem(self.root, c.DRAFT_ID, self.root / "solution.md")
 
+    def test_failed_prepare_preserves_original_data_and_statement(self):
+        paths = [self.problem / "data.zip", self.problem / "problem.md",
+                 self.problem / "data/secret/test00.ans"]
+        before = {path: path.read_bytes() for path in paths}
+        with patch.object(c, "verify_problem", side_effect=ValueError("Judge failure")), \
+                self.assertRaisesRegex(ValueError, "Judge failure"):
+            c.prepare_submission(self.root)
+        for path, content in before.items():
+            self.assertEqual(path.read_bytes(), content)
+
 
 if __name__ == "__main__":
     unittest.main()
