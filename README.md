@@ -13,15 +13,15 @@
 
 ## 方式一：使用 AI Agent 辅助投稿（推荐）
 
-将下方三段提示词依次发送给你的 AI 编程助手（如 Cursor、Claude Code、Windsurf 等），即可引导 AI 完成从环境配置到提交 PR 的全流程。
+将下方三段提示词依次发送给你的 AI 编程助手（如 Codex、Claude Code、DSH 等），即可引导 AI 完成从环境配置到提交 PR 的全流程。
 
 ### 第一步：让 AI 配好环境
 
 ~~~text
-请帮我准备这个投稿项目的本地环境：
+帮我准备这个投稿项目的本地环境：
 https://github.com/greenthree/meiriyiti-contributions
 
-请将此仓库 Fork 到我的 GitHub 账号，再从我的 Fork 准备本地项目。
+将此仓库 Fork 到我的 GitHub 账号，再从我的 Fork 准备本地项目。
 已有 Fork 或本地项目请复用，保留已有修改，并确认推送目标是我自己的 Fork。
 先阅读项目的 AGENTS.md 和 docs/ENVIRONMENT.md，安装所需工具和固定版本依赖，并实际检查能否运行。
 需要我操作时，请用简单的步骤说明。完成后告诉我项目文件夹位置，以及是否可以开始出题。
@@ -32,7 +32,7 @@ https://github.com/greenthree/meiriyiti-contributions
 填写 `【】` 中的内容，在同一会话中继续发送：
 
 ~~~text
-请先阅读并遵守本项目的 AGENTS.md，完成一道每日一题投稿。
+先阅读并遵守本项目的 AGENTS.md，完成一道每日一题投稿。
 
 题意描述：【填写你的想法】
 作者署名与来源：【填写署名，并说明原创或改编来源】
@@ -45,7 +45,7 @@ https://github.com/greenthree/meiriyiti-contributions
 确认题目内容无误后，继续发送：
 
 ~~~text
-请按 AGENTS.md 帮我投稿到：
+按 AGENTS.md 帮我投稿到：
 https://github.com/greenthree/meiriyiti-contributions
 
 核对署名、来源和发布修改授权；需要我登录或确认授权时，请用简单的步骤说明。
