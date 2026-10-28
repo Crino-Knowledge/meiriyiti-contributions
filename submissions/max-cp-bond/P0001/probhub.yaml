@@ -1,0 +1,300 @@
+schema_version: 1
+id: P0001
+name: 有哪些优秀的百合作品
+display_name: 有哪些优秀的百合作品
+difficulty: 0
+tags:
+- 最大公约数
+- 枚举
+- 数学
+limits:
+  time: 2
+  memory: 256
+  output: 64
+  processes: 32
+statement:
+  source: problem.md
+  quote:
+    text: 好了，花点时间去寻找优秀的百合作品，不再讨论这件事情了。
+    source: 小D
+judge:
+  type: custom
+  validator: code/validator.cpp
+  checker: code/checker.cpp
+  qa:
+    schema_version: 1
+    robustness:
+      baseline: accepts-alternative
+      probes:
+      - empty
+      - truncated
+      - extra-token
+      - oversized
+    cases:
+    - id: accepts-alternative
+      purpose: 合法替代答案：同一对被逆序输出，仍然正确
+      case: sample/1
+      contestant_output: judge-fixtures/checker/alternative.out
+      expected:
+        status: AC
+    - id: accepts-tied-answer
+      purpose: 合法替代答案：存在多对最优 CP 时选择另一对
+      case: sample/2
+      contestant_output: judge-fixtures/checker/tie-alternative.out
+      expected:
+        status: AC
+    - id: rejects-non-optimal
+      purpose: 格式合法但不是最优的一对
+      case: sample/1
+      contestant_output: judge-fixtures/checker/non-optimal.out
+      expected:
+        status: WA
+    - id: rejects-wrong-value
+      purpose: 编号正确但羁绊指数算错
+      case: sample/1
+      contestant_output: judge-fixtures/checker/wrong-value.out
+      expected:
+        status: WA
+    - id: rejects-unknown-role
+      purpose: 输出不在候选列表中的编号
+      case: sample/1
+      contestant_output: judge-fixtures/checker/unknown-role.out
+      expected:
+        status: WA
+    - id: rejects-same-role
+      purpose: 把同一个角色当成一对
+      case: sample/1
+      contestant_output: judge-fixtures/checker/same-role.out
+      expected:
+        status: WA
+    - id: rejects-missing-work
+      purpose: 少输出一部作品
+      case: sample/1
+      contestant_output: judge-fixtures/checker/missing-work.out
+      expected:
+        status: WA
+    - id: rejects-extra-token
+      purpose: 输出末尾多出一行内容
+      case: sample/1
+      contestant_output: judge-fixtures/checker/extra-token.out
+      expected:
+        status: WA
+    - id: rejects-huge-value
+      purpose: 羁绊指数超出取值上限
+      case: sample/1
+      contestant_output: judge-fixtures/checker/huge-value.out
+      expected:
+        status: WA
+solutions:
+  accepted:
+  - file: code/std.cpp
+    expected:
+      status: AC
+      all: true
+  - file: code/std2.cpp
+    expected:
+      status: AC
+      all: true
+    independence:
+      from: code/std.cpp
+      basis: algorithm
+      note: std.cpp 对每对编号做欧几里得辗转相除，用 (a/g)*(b/g) 得到羁绊指数；std2.cpp 先用 44722 以内的素数筛把每个编号分解质因数，再对每对编号按质因子合并、累乘指数之差的幂，全程不做除法也不调用 gcd，两者算法路线不同且不共享代码。
+  brute: []
+  wrong:
+  - file: code/wrong.cpp
+    expected:
+      status: WA
+      groups:
+      - with-max
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong2.cpp
+    expected:
+      status: WA
+      groups:
+      - adjacent
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong3.cpp
+    expected:
+      status: WA
+      groups:
+      - overflow
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong4.cpp
+    expected:
+      status: WA
+      groups:
+      - precision
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong5.cpp
+    expected:
+      status: WA
+      groups:
+      - truncation
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong6.cpp
+    expected:
+      status:
+      - TLE
+      groups:
+      - performance
+      all: false
+      forbid:
+      - WA
+      - FAIL
+  - file: code/wrong7.cpp
+    expected:
+      status: WA
+      groups:
+      - multi-test
+      all: false
+      forbid:
+      - FAIL
+generators:
+- code/inmaker.cpp
+data:
+  sample_dir: data/sample
+  secret_dir: data/secret
+  groups:
+  - name: boundary
+    role: boundary
+    patterns:
+    - sample/*
+    - secret/edge*
+  - name: with-max
+    role: wrong-solution-killer
+    patterns:
+    - secret/withmax*
+    targets:
+    - code/wrong.cpp
+  - name: adjacent
+    role: wrong-solution-killer
+    patterns:
+    - secret/adj*
+    targets:
+    - code/wrong2.cpp
+  - name: overflow
+    role: wrong-solution-killer
+    patterns:
+    - secret/overflow*
+    targets:
+    - code/wrong3.cpp
+  - name: precision
+    role: wrong-solution-killer
+    patterns:
+    - secret/precision*
+    targets:
+    - code/wrong4.cpp
+  - name: truncation
+    role: wrong-solution-killer
+    patterns:
+    - secret/truncation*
+    targets:
+    - code/wrong5.cpp
+  - name: performance
+    role: wrong-solution-killer
+    patterns:
+    - secret/big*
+    - secret/dense*
+    - secret/random03
+    targets:
+    - code/wrong6.cpp
+  - name: multi-test
+    role: wrong-solution-killer
+    patterns:
+    - secret/reset*
+    targets:
+    - code/wrong7.cpp
+  - name: tie
+    role: special-judge
+    patterns:
+    - secret/tie*
+  - name: random
+    role: random-supplement
+    patterns:
+    - secret/random*
+  recipes:
+  - case: edge01
+    manual: true
+  - case: edge02
+    manual: true
+  - case: edge03
+    manual: true
+  - case: withmax01
+    manual: true
+  - case: withmax02
+    manual: true
+  - case: adj01
+    manual: true
+  - case: adj02
+    manual: true
+  - case: tie01
+    manual: true
+  - case: tie02
+    manual: true
+  - case: tie03
+    manual: true
+  - case: overflow01
+    manual: true
+  - case: overflow02
+    manual: true
+  - case: precision01
+    manual: true
+  - case: truncation01
+    manual: true
+  - case: reset01
+    manual: true
+  - case: big01
+    generator: code/inmaker.cpp
+    args:
+    - big
+    - '10'
+  - case: random01
+    generator: code/inmaker.cpp
+    args:
+    - random
+    - '3'
+    - '8'
+    - '200'
+  - case: random02
+    generator: code/inmaker.cpp
+    args:
+    - random
+    - '5'
+    - '300'
+    - '2000000000'
+  - case: random03
+    generator: code/inmaker.cpp
+    args:
+    - dense
+    - '10'
+    - '100000'
+  - case: dense01
+    generator: code/inmaker.cpp
+    args:
+    - dense
+    - '3'
+    - '5000'
+stress:
+  generator: code/inmaker.cpp
+  args:
+  - random
+  - '3'
+  - '10'
+  - '2000000000'
+  - '{seed}'
+  brute: code/std2.cpp
+  rounds: 100
+  time_limit: 1
+  tool_timeout: 5
+domjudge:
+  include_pdf: false
