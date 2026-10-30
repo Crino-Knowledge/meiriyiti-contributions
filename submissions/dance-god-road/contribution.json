@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "problem_id": "P0001",
+  "topic": "模拟、哈希表、Top K",
+  "authors": [
+    {
+      "name": "mico-v",
+      "github": "mico-v"
+    }
+  ],
+  "permission": "允许署名发布、修改并用于本项目教学与评测",
+  "source": "原创（Rating 系数规则参考《舞萌 DX》）"
+}
