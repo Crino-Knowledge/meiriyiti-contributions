@@ -1,0 +1,251 @@
+schema_version: 1
+id: P0001
+name: 舞神之路
+display_name: 舞神之路
+difficulty: 0
+tags:
+- 模拟
+- 哈希表
+- Top K
+limits:
+  time: 3
+  memory: 256
+  output: 64
+  processes: 32
+statement:
+  source: problem.md
+  quote:
+    text: 每一次进步，都会被榜单记住。
+    source: mico-v
+judge:
+  type: standard
+  validator: code/validator.cpp
+solutions:
+  accepted:
+  - file: code/std.cpp
+    expected:
+      status: AC
+      all: true
+  - file: code/std2.cpp
+    expected:
+      status: AC
+      all: true
+    independence:
+      from: code/std.cpp
+      basis: algorithm
+      note: std.cpp 用 map 记录每张谱面的最高分，并用 multiset 保存各版本的当前有效分数；std2.cpp 把谱面最高分存入 map，再用 0 到 336 的计数桶统计分数频次并扫描最高 K 条，两者维护 Top K 的算法不同。
+  brute: []
+  wrong:
+  - file: code/wrong.cpp
+    expected:
+      status: WA
+      groups:
+      - duplicate-id
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong2.cpp
+    expected:
+      status: WA
+      groups:
+      - window
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong3.cpp
+    expected:
+      status: WA
+      groups:
+      - sum-all
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong4.cpp
+    expected:
+      status: WA
+      groups:
+      - rounding
+      all: false
+      forbid:
+      - FAIL
+  - file: code/wrong5.cpp
+    expected:
+      status:
+      - TLE
+      groups:
+      - performance
+      all: false
+      forbid:
+      - WA
+      - FAIL
+  - file: code/wrong6.cpp
+    expected:
+      status: WA
+      groups:
+      - split
+      all: false
+      forbid:
+      - FAIL
+generators:
+- code/inmaker.cpp
+data:
+  sample_dir: data/sample
+  secret_dir: data/secret
+  groups:
+  - name: boundary
+    role: boundary
+    patterns:
+    - secret/min*
+    - secret/floor*
+    - secret/zero*
+    - secret/max*
+    - secret/sparse*
+    - secret/stair*
+  - name: window
+    role: wrong-solution-killer
+    patterns:
+    - secret/oldfill*
+    - secret/oldtie*
+    - secret/oldreplace*
+    - secret/newfill*
+    - secret/newreplace*
+    - secret/ties*
+    - secret/grind*
+    - secret/stair*
+    targets:
+    - code/wrong2.cpp
+  - name: duplicate-id
+    role: wrong-solution-killer
+    patterns:
+    - secret/grind*
+    - secret/sparse*
+    - secret/interleave*
+    targets:
+    - code/wrong.cpp
+  - name: split
+    role: wrong-solution-killer
+    patterns:
+    - secret/split*
+    targets:
+    - code/wrong6.cpp
+  - name: sum-all
+    role: wrong-solution-killer
+    patterns:
+    - secret/oldreplace*
+    - secret/newreplace*
+    - secret/random02
+    - secret/grind*
+    targets:
+    - code/wrong3.cpp
+  - name: rounding
+    role: wrong-solution-killer
+    patterns:
+    - secret/precision*
+    targets:
+    - code/wrong4.cpp
+  - name: performance
+    role: performance
+    patterns:
+    - secret/performance*
+    targets:
+    - code/wrong5.cpp
+  - name: random
+    role: random-supplement
+    patterns:
+    - secret/random*
+    - secret/allrank*
+    - secret/interleave*
+  recipes:
+  - case: min01
+    generator: code/inmaker.cpp
+    args:
+    - min
+  - case: floor01
+    generator: code/inmaker.cpp
+    args:
+    - floor
+  - case: oldfill01
+    generator: code/inmaker.cpp
+    args:
+    - old-fill
+  - case: oldtie01
+    generator: code/inmaker.cpp
+    args:
+    - old-tie
+  - case: oldreplace01
+    generator: code/inmaker.cpp
+    args:
+    - old-replace
+  - case: newfill01
+    generator: code/inmaker.cpp
+    args:
+    - new-fill
+  - case: newreplace01
+    generator: code/inmaker.cpp
+    args:
+    - new-replace
+  - case: split01
+    generator: code/inmaker.cpp
+    args:
+    - split
+  - case: allrank01
+    generator: code/inmaker.cpp
+    args:
+    - all-rank
+  - case: precision01
+    generator: code/inmaker.cpp
+    args:
+    - precision
+  - case: zero01
+    generator: code/inmaker.cpp
+    args:
+    - zero
+  - case: max01
+    generator: code/inmaker.cpp
+    args:
+    - max
+  - case: ties01
+    generator: code/inmaker.cpp
+    args:
+    - ties
+  - case: random01
+    generator: code/inmaker.cpp
+    args:
+    - random
+    - '100'
+  - case: random02
+    generator: code/inmaker.cpp
+    args:
+    - random
+    - '5000'
+  - case: performance01
+    generator: code/inmaker.cpp
+    args:
+    - performance
+  - case: interleave01
+    generator: code/inmaker.cpp
+    args:
+    - interleave
+  - case: sparse01
+    generator: code/inmaker.cpp
+    args:
+    - sparse
+  - case: grind01
+    generator: code/inmaker.cpp
+    args:
+    - grind
+  - case: stair01
+    generator: code/inmaker.cpp
+    args:
+    - stair
+domjudge:
+  include_pdf: false
+stress:
+  generator: code/inmaker.cpp
+  args:
+  - stress
+  - '{seed}'
+  brute: code/std2.cpp
+  rounds: 100
+  time_limit: 3
+  tool_timeout: 5
